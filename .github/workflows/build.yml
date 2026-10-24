@@ -1,5 +1,11 @@
 name: Build debug APK
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,20 +16,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run build script
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
         run: |
           set -e
-          if [ -f "./gradlew" ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug
-          elif [ -f "../gradlew" ]; then
-            chmod +x ../gradlew
-            ../gradlew -p . assembleDebug
-          elif [ -f "../../gradlew" ]; then
-            chmod +x ../../gradlew
-            ../../gradlew -p . assembleDebug
-          else
-            echo "gradlew not found. Getting available Gradle files."
-            find .. -name "gradlew" -type f
-            exit 1
-          fi
+          for g in ./gradlew ../gradlew ../../gradlew; do
+            if [ -f "$g" ]; then
+              chmod +x "$g"
+              "$g" -p . assembleDebug
+              exit 0
+            fi
+          done
+          echo "gradlew not found"
+          find ../.. -name gradlew -type f
+          exit 1
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: project/CinematicAIPro/**/build/outputs/apk/debug/*.apk
