@@ -14,5 +14,5 @@ uses: actions/checkout@v4
     run: |
       echo "Repository files:"
       ls -la
-      echo "Android project files:"
-      find . -maxdepth 4 -name gradlew -o -name settings.gradle -o -name settings.gradle.kts -o -name '*.zip' -print
+      echo "Project files:"
+      find . -maxdepth 4 -type f
