@@ -1,18 +1,29 @@
 name: Build debug APK
-  working-directory: project/CinematicAIPro
-  run: |
-    set -e
-    if [ -f "./gradlew" ]; then
-      chmod +x ./gradlew
-      ./gradlew assembleDebug
-    elif [ -f "../gradlew" ]; then
-      chmod +x ../gradlew
-      ../gradlew -p . assembleDebug
-    elif [ -f "../../gradlew" ]; then
-      chmod +x ../../gradlew
-      ../../gradlew -p . assembleDebug
-    else
-      echo "gradlew not found. Checking available Gradle files."
-      find .. -name "gradlew" -type f
-      exit 1
-    fi
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: project/CinematicAIPro
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run build script
+        run: |
+          set -e
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          elif [ -f "../gradlew" ]; then
+            chmod +x ../gradlew
+            ../gradlew -p . assembleDebug
+          elif [ -f "../../gradlew" ]; then
+            chmod +x ../../gradlew
+            ../../gradlew -p . assembleDebug
+          else
+            echo "gradlew not found. Getting available Gradle files."
+            find .. -name "gradlew" -type f
+            exit 1
+          fi
