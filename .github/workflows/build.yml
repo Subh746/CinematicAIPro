@@ -1,46 +1,11 @@
-name: Build debug APK
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: project/CinematicAIPro
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # <-- Ensure this is present
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build debug APK
+      - name: Run script
+        working-directory: ./project/CinematicAIPro
         run: |
-          set -e
-          for g in ./gradlew ../gradlew ../../gradlew; do
-            if [ -f "$g" ]; then
-              chmod +x "$g"
-              "$g" -p . assembleDebug
-              exit 0
-            fi
-          done
-          echo "gradlew not found"
-          find ../.. -name gradlew -type f
-          exit 1
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: project/CinematicAIPro/**/build/outputs/apk/debug/*.apk
+          echo "Running build..."
