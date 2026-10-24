@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Find and extract project ZIP
-        run: | ZIP_FILE="CinematicAIPro_Android_Full_Project.zip" if [ ! -f "$ZIP_FILE" ]; then echo "Upload CinematicAIPro_Android_Full_Project.zip to the repository root first." exit 1 fi mkdir -p source unzip -q "$ZIP_FILE" -d source 
+        run: | ZIP_FILE="CinematicAIPro_Android_Full_Project.zip "if [ ! -f "$ZIP_FILE" ]; then echo "Upload CinematicAIPro_Android_Full_Project.zip to the repository root first." exit 1 fi mkdir -p source unzip -q "$ZIP_FILE" -d source 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
