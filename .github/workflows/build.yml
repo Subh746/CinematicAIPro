@@ -1,5 +1,72 @@
-- name: Patch Java compatibility
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project ZIP
+        run: |
+          set -e
+          ZIP=$(find . -maxdepth 2 -type f -iname 'CinematicAIPro_Android_Full_Project.zip' | head -n 1)
+          if [ -z "$ZIP" ]; then
+            echo "Project ZIP not found"
+            exit 1
+          fi
+          mkdir project
+          unzip -q "$ZIP" -d project
+          echo "Extracted project files:"
+          find project -maxdepth 3 -type f | head -100
+
+      - name: Patch Java compatibility
         run: |
           F=$(find project -path '*app/build.gradle.kts' | head -n 1)
+          echo "Patching $F"
           sed -i 's/VERSION_1_8/VERSION_17/g; s/jvmTarget = "1.8"/jvmTarget = "17"/g' "$F"
-          grep -n -E 'VERSION_|jvmTarget' "$F" || echo "No compileOptions found"
+          if ! grep -q 'compileOptions' "$F"; then
+            sed -i '/^android {/a\    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_17\n        targetCompatibility = JavaVersion.VERSION_17\n    }' "$F"
+          fi
+          echo "--- Result ---"
+          grep -n -E 'VERSION_|jvmTarget|compileOptions' "$F" || true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        run: |
+          set -e
+          SETTINGS=$(find project -type f \( -name settings.gradle.kts -o -name settings.gradle \) | head -n 1)
+          if [ -z "$SETTINGS" ]; then
+            echo "settings.gradle(.kts) not found"
+            exit 1
+          fi
+          cd "$(dirname "$SETTINGS")"
+          gradle assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CinematicAIPro-debug-apk
+          path: project/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
